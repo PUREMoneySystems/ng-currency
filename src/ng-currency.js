@@ -4,6 +4,18 @@
 
  * Version: 0.7.5 - 2014-07-15
  * License: MIT
+ *
+ *
+ *
+ .directive('currencyMax', function(){
+ return { controller: function($scope){} }
+ })
+ .directive('currencySymbol', function(){
+ return { controller: function($scope){} }
+ })
+ .directive('currencyNod', function(){
+ return { controller: function($scope){} }
+ })
  */
 
 angular.module('ng-currency', [])
@@ -11,8 +23,10 @@ angular.module('ng-currency', [])
         return {
             require: 'ngModel',
             scope: {
-                min: '=min',
-                max: '=max',
+                min: '=',
+                max: '=',
+                symbol: '=',
+                numberOfDecimals: '=nod',
                 ngRequired: '=ngRequired'
             },
             link: function (scope, element, attrs, ngModel) {
@@ -22,7 +36,7 @@ angular.module('ng-currency', [])
                 }
 
                 function clearRex(dChar) {
-                    return RegExp("((\\" + dChar + ")|([0-9]{1,}\\" + dChar + "?))&?[0-9]{0,2}", 'g');
+                    return RegExp("((\\" + dChar + ")|([0-9]{1,}\\" + dChar + "?))&?[0-9]{0,10}", 'g');
                 }
 
                 function decimalSepRex(dChar) {
@@ -58,11 +72,27 @@ angular.module('ng-currency', [])
                 });
 
                 element.on("blur", function () {
-                    element.val($filter('currency')(ngModel.$modelValue));
+                    if(scope.symbol) {
+                        if(isNaN(scope.numberOfDecimals)){
+                            element.val($filter('currency')(ngModel.$modelValue, scope.symbol));
+                        }else{
+                            element.val($filter('currency')(ngModel.$modelValue, scope.symbol, parseInt(scope.numberOfDecimals)));
+                        }
+                    }else{
+                        element.val($filter('currency')(ngModel.$modelValue));
+                    }
                 });
 
                 ngModel.$formatters.unshift(function (value) {
-                    return $filter('currency')(value);
+                    if(scope.symbol) {
+                        if(isNaN(scope.numberOfDecimals)){
+                            return $filter('currency')(value, scope.symbol);
+                        }else{
+                            return $filter('currency')(value, scope.symbol, parseInt(scope.numberOfDecimals));
+                        }
+                    }else{
+                        return $filter('currency')(value);
+                    }
                 });
 
                 scope.$watch(function () {
