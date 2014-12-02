@@ -2,10 +2,10 @@
  * ng-currency
  * http://alaguirre.com/
 
- * Version: 0.7.5 - 2014-07-15
+ * Version: 0.7.10 - 2014-11-26
  * License: MIT
  *
- *
+ *			
  *
  .directive('currencyMax', function(){
  return { controller: function($scope){} }
@@ -19,51 +19,55 @@
  */
 
 angular.module('ng-currency', [])
-    .directive('ngCurrency', function ($filter, $locale) {
+    .directive('ngCurrency', ['$filter', '$locale', function ($filter, $locale) {
         return {
             require: 'ngModel',
             scope: {
-                min: '=',
-                max: '=',
-                symbol: '=',
                 numberOfDecimals: '=nod',
+                min: '=min',
+                max: '=max',
+                currencySymbol: '@',
                 ngRequired: '=ngRequired'
             },
             link: function (scope, element, attrs, ngModel) {
 
                 function decimalRex(dChar) {
-                    return RegExp("\\d|\\" + dChar, 'g')
+                    return RegExp("\\d|\\-|\\" + dChar, 'g');
                 }
 
                 function clearRex(dChar) {
-                    return RegExp("((\\" + dChar + ")|([0-9]{1,}\\" + dChar + "?))&?[0-9]{0,10}", 'g');
-                }
-
-                function decimalSepRex(dChar) {
-                    return RegExp("\\" + dChar, "g")
+                    return RegExp("\\-{0,1}((\\" + dChar + ")|([0-9]{1,}\\" + dChar + "?))&?[0-9]{0,2}", 'g');
                 }
 
                 function clearValue(value) {
                     value = String(value);
                     var dSeparator = $locale.NUMBER_FORMATS.DECIMAL_SEP;
-                    var clear = null;
+                    var cleared = null;
 
-                    if (value.match(decimalSepRex(dSeparator))) {
-                        clear = value.match(decimalRex(dSeparator))
+                    if(RegExp("^-[\\s]*$", 'g').test(value)) {
+                        value = "-0";
+                    }
+
+                    if(decimalRex(dSeparator).test(value))
+                    {
+                        cleared = value.match(decimalRex(dSeparator))
                             .join("").match(clearRex(dSeparator));
-                        clear = clear ? clear[0].replace(dSeparator, ".") : null;
+                        cleared = cleared ? cleared[0].replace(dSeparator, ".") : null;
                     }
-                    else if (value.match(decimalSepRex("."))) {
-                        clear = value.match(decimalRex("."))
-                            .join("").match(clearRex("."));
-                        clear = clear ? clear[0] : null;
-                    }
-                    else {
-                        clear = value.match(/\d/g);
-                        clear = clear ? clear.join("") : null;
+                    else
+                    {
+                        cleaned = null;
                     }
 
-                    return clear;
+                    return cleared;
+                }
+
+                function currencySymbol() {
+                    if (angular.isDefined(scope.currencySymbol)) {
+                        return scope.currencySymbol;
+                    } else {
+                        return $locale.NUMBER_FORMATS.CURRENCY_SYM;
+                    }
                 }
 
                 ngModel.$parsers.push(function (viewValue) {
@@ -72,33 +76,33 @@ angular.module('ng-currency', [])
                 });
 
                 element.on("blur", function () {
-                    if(scope.symbol) {
+                    if(angular.isDefined(scope.currencySymbol)) {
                         if(isNaN(scope.numberOfDecimals)){
-                            element.val($filter('currency')(ngModel.$modelValue, scope.symbol));
+                            element.val($filter('currency')(ngModel.$modelValue, currencySymbol()));
                         }else{
-                            element.val($filter('currency')(ngModel.$modelValue, scope.symbol, parseInt(scope.numberOfDecimals)));
+                            element.val($filter('currency')(ngModel.$modelValue, currencySymbol(), parseInt(scope.numberOfDecimals)));
                         }
                     }else{
-                        element.val($filter('currency')(ngModel.$modelValue));
+                        element.val($filter('currency')(ngModel.$modelValue, currencySymbol()));
                     }
                 });
 
                 ngModel.$formatters.unshift(function (value) {
-                    if(scope.symbol) {
+                    if(angular.isDefined(scope.currencySymbol)) {
                         if(isNaN(scope.numberOfDecimals)){
-                            return $filter('currency')(value, scope.symbol);
+                            return $filter('currency')(value, currencySymbol());
                         }else{
-                            return $filter('currency')(value, scope.symbol, parseInt(scope.numberOfDecimals));
+                            return $filter('currency')(value, currencySymbol(), parseInt(scope.numberOfDecimals));
                         }
                     }else{
-                        return $filter('currency')(value);
+                        return $filter('currency')(value, currencySymbol());
                     }
                 });
 
                 scope.$watch(function () {
                     return ngModel.$modelValue
                 }, function (newValue, oldValue) {
-                    runValidations(newValue)
+                    runValidations(newValue);
                 })
 
                 function runValidations(cVal) {
@@ -116,5 +120,4 @@ angular.module('ng-currency', [])
                 }
             }
         }
-    });
-
+    }]);
