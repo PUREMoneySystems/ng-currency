@@ -7,15 +7,6 @@
  *
  *			
  *
- .directive('currencyMax', function(){
- return { controller: function($scope){} }
- })
- .directive('currencySymbol', function(){
- return { controller: function($scope){} }
- })
- .directive('currencyNod', function(){
- return { controller: function($scope){} }
- })
  */
 
 angular.module('ng-currency', [])
