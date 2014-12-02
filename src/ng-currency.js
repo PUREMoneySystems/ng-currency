@@ -76,6 +76,7 @@ angular.module('ng-currency', [])
                 });
 
                 element.on("blur", function () {
+<<<<<<< HEAD
                     if(angular.isDefined(scope.currencySymbol)) {
                         if(isNaN(scope.numberOfDecimals)){
                             element.val($filter('currency')(ngModel.$modelValue, currencySymbol()));
@@ -97,6 +98,13 @@ angular.module('ng-currency', [])
                     }else{
                         return $filter('currency')(value, currencySymbol());
                     }
+=======
+                    element.val($filter('currency')(ngModel.$modelValue, currencySymbol()));
+                });
+
+                ngModel.$formatters.unshift(function (value) {
+                    return $filter('currency')(value, currencySymbol());
+>>>>>>> upstream/master
                 });
 
                 scope.$watch(function () {
